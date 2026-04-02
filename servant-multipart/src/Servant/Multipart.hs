@@ -61,6 +61,8 @@ import System.Directory
 
 import qualified Data.ByteString      as SBS
 
+import Servant.Multipart.Internal (LookupContext(lookupContext))
+
 -- | Lookup a textual input with the given @name@ attribute.
 lookupInput :: Text -> MultipartData tag -> Either String Text
 lookupInput iname =
@@ -272,25 +274,6 @@ defaultMultipartOptions pTag = MultipartOptions
   { generalOptions = defaultParseRequestBodyOptions
   , backendOptions = defaultBackendOptions pTag
   }
-
--- Utility class that's like HasContextEntry
--- but allows the lookup to fail, to make a context
--- entry for upload config optional (hence using
--- some default configuration when missing)
-class LookupContext ctx a where
-  lookupContext :: Proxy a -> Context ctx -> Maybe a
-
-instance LookupContext '[] a where
-  lookupContext _ _ = Nothing
-
-instance {-# OVERLAPPABLE #-}
-         LookupContext cs a => LookupContext (c ': cs) a where
-  lookupContext p (_ :. cxts) =
-    lookupContext p cxts
-
-instance {-# OVERLAPPING #-}
-         LookupContext cs a => LookupContext (a ': cs) a where
-  lookupContext _ (c :. _) = Just c
 
 -- | The 'ToMultipartSample' class allows you to create sample 'MultipartData'
 -- inputs for your type for use with "Servant.Docs".  This is used by the
